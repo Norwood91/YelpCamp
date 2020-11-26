@@ -1,16 +1,18 @@
+//DEPENDENCIES
 const express = require('express')
 const path = require('path')
 const mongoose = require('mongoose')
+const ejsMate = require('ejs-mate')
 const methodOverride = require('method-override')
 const Campground = require('./models/campground.js')
 
-
+//CONNECT TO MONGOOSE
 mongoose.connect('mongodb://localhost:27017/yelp-camp', {
 	useNewUrlParser: true,
 	useCreateIndex: true,
 	useUnifiedTopology: true
 })
-
+//CHECK IF CONNECTION HAS ERRORS OR IS SUCCESSFUL
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'connection error'))
 db.once('open', () => {
@@ -19,13 +21,16 @@ db.once('open', () => {
 
 const app = express()
 
+//SET VIEW ENGINE TO EJS
+app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
+//HELPS WITH FORM SUBMISSIONS
 app.use(express.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
 
-
+//RESTful ROUTES BELOW
 app.get('/', (req, res) => {
 	res.render('home')
 })
