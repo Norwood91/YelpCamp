@@ -3,20 +3,14 @@ const express = require('express')
 const path = require('path')
 const mongoose = require('mongoose')
 const ejsMate = require('ejs-mate')
-const {campgroundSchema, reviewSchema} = require('./schemas.js')
-const catchAsync = require('./utilities/catchAsync.js')
 const ExpressError = require('./utilities/ExpressError.js')
 const methodOverride = require('method-override')
 const passport = require('passport')
 const LocalPassport = require('passport-local')
-const Review = require('./models/review')
 
+const campgrounds = require('./routes/campgrounds')
+const reviews = require('./routes/reviews')
 
-
-
-
-
-const Campground = require('./models/campground.js')
 
 //CONNECT TO MONGOOSE
 mongoose.connect('mongodb://localhost:27017/yelp-camp', {
@@ -43,51 +37,13 @@ app.use(express.urlencoded({ extended: true }))
 app.use(methodOverride('_method'))
 
 
-const campgrounds = require('./routes/campgrounds')
 app.use('/campgrounds', campgrounds)
+app.use('/campgrounds/:id/reviews', reviews)
 
-const validateReview = (req, res, next) => {
-	const { error } = reviewSchema.validate(req.body)
-	if(error) {
-		const msg = error.details.map(el => el.message).join(',')
-		throw new ExpressError(msg, 400)
-	} else {
-		next()
-	}
-}
-
-
-
-//RESTful ROUTES BELOW
+//HOME ROUTE
 app.get('/', (req, res) => {
 	res.render('home')
 })
-
-
-//REVIEW POST ROUTE
-app.post('/campgrounds/:id/reviews', validateReview, catchAsync (async(req, res) => {
-	//finds the campground
-	const campground = await Campground.findById(req.params.id)
-	//creates the new review
-	const review = new Review(req.body.review)
-	//push the newly created review to the campground's reviews array
-	campground.reviews.push(review)
-	await review.save()
-	await campground.save()
-	res.redirect(`/campgrounds/${campground._id}`)
-}))
-
-//REVIEW DELETE ROUTE
-app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync (async(req, res) => {
-	//destructure the params
-	const { id, reviewId } = req.params
-	//we find the campground by the ID then
-	//we PULL from that campground's REVIEWS array, the ID of the review we want to delete
-	await Campground.findByIdAndUpdate(id, {$pull: {reviews: reviewId }})
-	//then we delete the review 
-	await Review.findByIdAndDelete(reviewId)
-	res.redirect(`/campgrounds/${id}`)
-}))
 
 
 
