@@ -3,12 +3,13 @@ const express = require('express')
 const path = require('path')
 const mongoose = require('mongoose')
 const ejsMate = require('ejs-mate')
-const {campgroundSchema} = require('./schemas.js')
+const {campgroundSchema, reviewSchema} = require('./schemas.js')
 const catchAsync = require('./utilities/catchAsync.js')
 const ExpressError = require('./utilities/ExpressError.js')
 const methodOverride = require('method-override')
 const passport = require('passport')
 const LocalPassport = require('passport-local')
+const Review = require('./models/review')
 
 
 
@@ -53,7 +54,15 @@ const validateCampground = (req, res, next) => {
 }
 
 
-
+const validateReview = (req, res, next) => {
+	const { error } = reviewSchema.validate(req.body)
+	if(error) {
+		const msg = error.details.map(el => el.message).join(',')
+		throw new ExpressError(msg, 400)
+	} else {
+		next()
+	}
+}
 
 
 
@@ -84,9 +93,36 @@ app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) =
 
 //SHOW ROUTE
 app.get('/campgrounds/:id', catchAsync(async (req, res) => {
-	const campground = await Campground.findById(req.params.id)
+	const campground = await Campground.findById(req.params.id).populate('reviews')
 	res.render('campgrounds/show', { campground })
 }))
+
+//REVIEW POST ROUTE
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync (async(req, res) => {
+	//finds the campground
+	const campground = await Campground.findById(req.params.id)
+	//creates the new review
+	const review = new Review(req.body.review)
+	//push the newly created review to the campground's reviews array
+	campground.reviews.push(review)
+	await review.save()
+	await campground.save()
+	res.redirect(`/campgrounds/${campground._id}`)
+}))
+
+//REVIEW DELETE ROUTE
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync (async(req, res) => {
+	//destructure the params
+	const { id, reviewId } = req.params
+	//we find the campground by the ID then
+	//we PULL from that campground's REVIEWS array, the ID of the review we want to delete
+	await Campground.findByIdAndUpdate(id, {$pull: {reviews: reviewId }})
+	//then we delete the review 
+	await Review.findByIdAndDelete(reviewId)
+	res.redirect(`/campgrounds/${id}`)
+}))
+
+
 
 //EDIT ROUTE
 app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
