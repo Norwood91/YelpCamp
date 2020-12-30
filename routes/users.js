@@ -9,7 +9,7 @@ router.get('/register', (req, res) => {
     res.render('users/register')
 })
 
-router.post('/register', catchAsync(async(req, res) => {
+router.post('/register', catchAsync(async(req, res, next) => {
     try{
         const { email, username, password } = req.body
         const user = new User({
@@ -18,9 +18,14 @@ router.post('/register', catchAsync(async(req, res) => {
         })
         //takes the user we just created above, and it's password, hashes the password and stores the hash/salt result on the new user.
         const registeredUser = await User.register(user, password)
-        req.flash('success', 'Welcome to YelpCamp')
-        res.redirect('/campgrounds')
-
+        //this will log the user in directly after he/she registers
+        req.login(registeredUser, err => {
+            if (err) {
+                return next(err) 
+            } else {
+                req.flash('success', 'Welcome to YelpCamp')
+                res.redirect('/campgrounds')
+        }})
     } catch(e) {
         req.flash('error', e.message)
         res.redirect('register')
@@ -35,6 +40,13 @@ router.get('/login', (req, res) => {
 router.post('/login', passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), (req, res) => {
     req.flash('success', 'Welcome back')
     res.redirect('/campgrounds')
+})
+
+//Logout Route
+router.get('/logout', (req, res) => {
+    req.logout()
+    req.flash('success', 'You successfully logged out')
+    res.redirect('/login')
 })
 
 

@@ -69,10 +69,13 @@ passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
 
 app.use((req, res, next) => {
+	//this allows us to have access, in all templates, to the current user
+	res.locals.currentUser = req.user
 	res.locals.success = req.flash('success')
 	res.locals.error = req.flash('error')
 	next()
 })
+
 app.use('/', userRoutes)
 app.use('/campgrounds', campgroundRoutes)
 app.use('/campgrounds/:id/reviews', reviewRoutes)
