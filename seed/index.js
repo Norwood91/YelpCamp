@@ -36,6 +36,8 @@ const seedDB = async() => {
 		const price = Math.floor(Math.random() * 20 ) + 10;
 		//create new campground 
 		const camp = new Campground({
+			//hard coded the below author
+			author: '5fea6221db13dc1cadcdd202',
 			//get a random city and random state from the cities.js file
 			location:`${cities[random1000].city}, ${cities[random1000].state}`,
 			//create a random title for the campground

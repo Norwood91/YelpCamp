@@ -39,7 +39,10 @@ router.get('/login', (req, res) => {
 //if there is a failure or user can't log in, an error (failure) msg will flash and user will be redirected back to the login page
 router.post('/login', passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), (req, res) => {
     req.flash('success', 'Welcome back')
-    res.redirect('/campgrounds')
+    const redirectUrl = req.session.returnTo || '/campgrounds'
+    //deletes returnTo from the session object
+    delete req.session.returnTo
+    res.redirect(redirectUrl)
 })
 
 //Logout Route

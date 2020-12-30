@@ -8,17 +8,20 @@
 		    	<p class="card-text"><%= campground.description%></p>
 		  	</div>
 		  	<ul class="list-group list-group-flush">
-		    	<li class="list-group-item text-muted"><%= campground.location %></li>
+				<li class="list-group-item text-muted"><%= campground.location %></li>
 		    	<li class="list-group-item">$<%=campground.price%>/night</li>
-		  	</ul>
+			</ul>
+			  <!--If there is a current user, and his/her id matches the campground author's user id, show the edit and delete button-->
+			<% if (currentUser && campground.author.equals(currentUser._id)) { %>
 		  	<div class="card-body">
 			    <a href="/campgrounds/<%= campground._id%>/edit" class='card-link btn btn-info'>Edit</a>
 			    <form class='d-inline' action="/campgrounds/<%= campground._id %>?_method=DELETE" method="POST">
 					<button class='btn btn-danger'>Delete</button>
 				</form>
-		  	</div>
+			  </div>
+			  <% } %>
 		  	<div class='card-footer text-muted'>
-		  		2 days ago
+				Submitted by user: <%= campground.author.username %>
 		  	</div>
 		</div>
 	</div>
@@ -46,8 +49,10 @@
 		 	<% for (let review of campground.reviews) { %>
 		 		<div class='mb-3 card'>
 			 		<div class='card-body'>
+						
 
-			 			<h5 class='card-title'>Rating: <%=review.rating%></h5>
+						 <h6 class='card-title'>Rating: <%=review.rating%></h6>
+						 
 
 			 			<p class='card-title'><%=review.body%></p>
 
