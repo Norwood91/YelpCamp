@@ -29,6 +29,17 @@
 				<textarea required class='form-control' type="text" id='description' name="campground[description]"><%= campground.description %></textarea>
 				<div class='valid-feedback'>Looks good!</div>
 			</div>
+			<div class="mb-3">
+				<% campground.images.forEach(function(img, i) { %> 
+					<img src="<%=img.url%>" class="img-thumbnail">
+					<div class="form-check-inline">
+						<!--Any checkbox that is clicked will have it's value added to the deleteimages array, and it'll be an array when we parse the body-->
+						<input type="checkbox" name="deleteImages[]" value="<%= img.filename %> " id="image-<%=i%>">
+						<label for="image-<%=i%>"><i class="fas fa-trash-alt"></i></label>
+					</div>
+					
+				<% }) %> 
+			</div>
 			<div class='mb-3'>
 				<button class='btn btn-success'>Update Campground</button>
 			</div>
