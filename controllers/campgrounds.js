@@ -1,4 +1,5 @@
 const Campground = require('../models/campground.js')
+const { cloudinary } = require('../cloudinary')
 
 module.exports.indexPage = async (req, res) => {
 	const campgrounds = await Campground.find({})
@@ -16,7 +17,6 @@ module.exports.createNewCampground = async (req, res, next) => {
     //this associates the new campground to a specific user, by the user id
     campground.author = req.user._id
 	await campground.save()
-	console.log(campground)
     req.flash('success', 'Succesfully created a new campground')
     res.redirect(`/campgrounds/${campground._id}`)
 }
@@ -45,12 +45,23 @@ module.exports.campgroundEditForm = async (req, res) => {
 
 module.exports.updateCampground = async (req, res) => {
 	const { id } = req.params
-	const campground = await Campground.findByIdAndUpdate(req.params.id, {...req.body.campground})
+	const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground})
 	const imgs = req.files.map(f => ({url: f.path, filename: f.filename}))
 	//use spread operator to pass the DATA from the array into the push method, so we don't push the ENTIRE array
 	//essentially, this pushes the newly uploaded photos to the images array, instead of overwriting the existing images
 	campground.images.push(...imgs)
 	await campground.save()
+	//if there are any images being deleted
+	if (req.body.deleteImages) {
+		//for every filename in the delete request
+		for(let filename of req.body.deleteImages) {
+			//destroy(delete) the image with that filename in cloudinary
+			cloudinary.uploader.destroy(filename)
+		}
+		//we are pulling out of the images array, any image who's filename is IN the delete request. That/those images will be deleted
+		await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages}}}})
+		console.log(campground)
+	}
 	req.flash('success', 'Successfully updated campground')
 	res.redirect(`/campgrounds/${id}`)
 }
