@@ -9,11 +9,7 @@ var upload = multer({ storage })
 
 router.route('/')
 .get(catchAsync(campgrounds.indexPage))
-.post(upload.array('image'), (req, res) => {
-	console.log(req.body, req.files)
-	res.send("It worked, yaaaaay")
-})
-//.post(isLoggedIn, validateCampground, catchAsync(campgrounds.createNewCampground))
+.post(isLoggedIn, upload.array('image'), validateCampground, catchAsync(campgrounds.createNewCampground))
 
 //CREATE ROUTE
 router.get('/new', isLoggedIn, campgrounds.newCampgroundForm)
@@ -21,7 +17,7 @@ router.get('/new', isLoggedIn, campgrounds.newCampgroundForm)
 //SHOW ROUTE
 router.route('/:id')
 .get(catchAsync(campgrounds.campgroundShowPage))
-.put(isLoggedIn, isAuthor, validateCampground, catchAsync(campgrounds.updateCampground))
+.put(isLoggedIn, isAuthor, upload.array('image'), validateCampground, catchAsync(campgrounds.updateCampground))
 .delete(isLoggedIn, isAuthor, catchAsync(campgrounds.deleteCampground))
 
 //EDIT ROUTE

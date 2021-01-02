@@ -10,10 +10,13 @@ module.exports.newCampgroundForm = (req, res) => {
 }
 
 module.exports.createNewCampground = async (req, res, next) => {
-    const campground = new Campground(req.body.campground)
+	const campground = new Campground(req.body.campground)
+	//map over the array, take only the PATH and FILENAME, make a new object for each one and put that in an array, so we end up with an array of however many uploaded images from the user, we then add it to the campground
+	campground.images = req.files.map(f => ({url: f.path, filename: f.filename}))
     //this associates the new campground to a specific user, by the user id
     campground.author = req.user._id
-    await campground.save()
+	await campground.save()
+	console.log(campground)
     req.flash('success', 'Succesfully created a new campground')
     res.redirect(`/campgrounds/${campground._id}`)
 }
@@ -43,6 +46,11 @@ module.exports.campgroundEditForm = async (req, res) => {
 module.exports.updateCampground = async (req, res) => {
 	const { id } = req.params
 	const campground = await Campground.findByIdAndUpdate(req.params.id, {...req.body.campground})
+	const imgs = req.files.map(f => ({url: f.path, filename: f.filename}))
+	//use spread operator to pass the DATA from the array into the push method, so we don't push the ENTIRE array
+	//essentially, this pushes the newly uploaded photos to the images array, instead of overwriting the existing images
+	campground.images.push(...imgs)
+	await campground.save()
 	req.flash('success', 'Successfully updated campground')
 	res.redirect(`/campgrounds/${id}`)
 }
