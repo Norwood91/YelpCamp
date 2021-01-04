@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
 const Review = require('./review')
 const Schema = mongoose.Schema
+//options to include virtuals set to true
+const opts = {toJSON: {virtuals: true}}
 
 const ImageSchema = new Schema({
 	url: String,
@@ -42,7 +44,23 @@ const CampgroundSchema = new Schema({
 		}
 
 	]
+}, opts)
+
+
+
+
+
+CampgroundSchema.virtual('properties.popupMarkup').get(function() {
+	return `
+	<a href="/campgrounds/${this._id}" style="text-decoration: none;">${this.title}</a>
+	<p>${this.description.substring(0,45)}...</p>
+
+	`
 })
+
+
+
+
 //Find a campground
 CampgroundSchema.post('findOneAndDelete', async function (doc) {
 	// if there is a campground
