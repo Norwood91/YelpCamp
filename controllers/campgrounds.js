@@ -1,5 +1,9 @@
 const Campground = require('../models/campground.js')
 const { cloudinary } = require('../cloudinary')
+const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding")
+const mapBoxToken = process.env.MAPBOX_TOKEN 
+//Pass the access token through when we instantiate a new mapbox geocoding instance
+const geocoder = mbxGeocoding({accessToken: mapBoxToken})
 
 module.exports.indexPage = async (req, res) => {
 	const campgrounds = await Campground.find({})
@@ -11,14 +15,24 @@ module.exports.newCampgroundForm = (req, res) => {
 }
 
 module.exports.createNewCampground = async (req, res, next) => {
+	const geoData = await geocoder.forwardGeocode({
+		query: req.body.campground.location,
+		limit: 1
+	}).send()
+	//console.log(req.body.campground.location)
+	//console.log(geoData.body.features[0].geometry.coordinates)
+
 	const campground = new Campground(req.body.campground)
+	//add on the geometry from the geocoder, which will be the latitude and longitude
+	campground.geometry = geoData.body.features[0].geometry
 	//map over the array, take only the PATH and FILENAME, make a new object for each one and put that in an array, so we end up with an array of however many uploaded images from the user, we then add it to the campground
 	campground.images = req.files.map(f => ({url: f.path, filename: f.filename}))
     //this associates the new campground to a specific user, by the user id
     campground.author = req.user._id
 	await campground.save()
+	console.log(campground)
     req.flash('success', 'Succesfully created a new campground')
-    res.redirect(`/campgrounds/${campground._id}`)
+    res.redirect(`/campgrounds/${campground._id}`) 
 }
 
 module.exports.campgroundShowPage = async (req, res) => {
